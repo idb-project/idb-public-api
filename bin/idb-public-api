@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+
+require 'rack/handler/puma'
+require 'idb/api'
+require 'idb/options'
+require 'idb/config_file'
+
+options = IDB::Options.parse(ARGV) do |error, parser|
+  usage(error.message, parser)
+end
+
+IDB.config = IDB::ConfigFile.load(options.config_file)
+
+# Avoid deprecation notice.
+I18n.enforce_available_locales = true
+
+Rack::Handler::Puma.run(IDB::API, {
+  environment: 'production',
+  Host: IDB.config.http.host,
+  Port: IDB.config.http.port,
+  Threads: IDB.config.http.threads
+})

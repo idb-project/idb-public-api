@@ -1,0 +1,134 @@
+#!/bin/bash
+
+# Copyright (c) 2013 bytemine GmbH
+# http://www.bytemine.net/
+# Authors: Bernd Ahlers <ahlers@bytemine.net>
+
+# This script is used by bytemine GmbH to record the maintenance of machines.
+
+CURL=$(which curl)
+FACTER=$(which facter)
+SCREEN=$(which screen)
+
+function die()
+{
+	local msg="$1"
+
+	echo "[ERROR] $msg"
+	exit 1
+}
+
+function msg()
+{
+	local msg="$1"
+
+	echo "==>  $msg"
+}
+
+function ask()
+{
+	local msg="$1"
+
+	echo -n "$msg "
+}
+
+function ensure_cmd()
+{
+	local name="$1"
+	local cmd="$2"
+
+	if [ -z "$cmd" ]; then
+		die "$name not installed, abort!"
+	fi
+}
+
+function detect_fqdn()
+{
+	if [ -n "$FACTER" ]; then
+		FQDN=$(facter fqdn)
+	else
+		FQDN=$(hostname -f)
+	fi
+}
+
+function write_screen_conf()
+{
+	local file="$1"
+
+	cat <<-SCREEN_CONFIG > $file
+		logfile $SCREENLOG
+		logfile flush 1
+		startup_message off
+		caption always
+		caption string "MAINTENANCE MODE -- %H"
+	SCREEN_CONFIG
+}
+
+function handle_submit_success()
+{
+	msg "Removing temp files"
+	rm -f $SCREENCONF $SCREENLOG
+}
+
+function handle_submit_error()
+{
+	msg "Submitting the maintenance log failed."
+	msg "Try again with the following command"
+	echo "$CURL_CMD"
+}
+
+ensure_cmd "curl" "$CURL"
+ensure_cmd "screen" "$SCREEN"
+
+# Set the TS variable to the current unix timestamp.
+TS=$(date +%s)
+
+# Tempfiles needed for the screen config and logfile.
+SCREENLOG=$(mktemp machine-maintenance-screenlog-${TS}.XXXXXXXXX)
+SCREENCONF=$(mktemp machine-maintenance-screen-config-${TS}-XXXXXXXXX)
+
+# The URL for the API.
+URL="%url%"
+
+# Make sure the FQDN variable is set to a sane value.
+detect_fqdn
+
+# Creating a temporary screen configuration.
+write_screen_conf $SCREENCONF
+
+# Starting a screen session that logs the complete session into a tempfile.
+$SCREEN -c $SCREENCONF -L
+
+# Ensure a clean prompt for the rest.
+clear
+
+msg "Sending maintenance event to server"
+
+ask "Enter username for server $URL:"
+read username
+
+# Compute the curl(1) command.
+CURL_CMD="$CURL -%curl_options% -XPOST --retry 3 -u $username"
+CURL_CMD="$CURL_CMD -F screenlog=@$SCREENLOG"
+
+# Read the noservice command.
+if [ -n "$1" ] ; then
+  if [ "$1" == "-l" ]; then
+    CURL_CMD="$CURL_CMD -F noservice=true"
+  fi
+fi
+
+CURL_CMD="$CURL_CMD $URL/machines/$FQDN/maintenance"
+
+# Actually submit the maintenance event via curl(1).
+$CURL_CMD
+
+if [ $? -eq 0 ]; then
+	echo
+	handle_submit_success
+	exit 0
+else
+	echo
+	handle_submit_error
+	exit 1
+fi

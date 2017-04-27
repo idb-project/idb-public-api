@@ -1,0 +1,25 @@
+---
+http:
+  host: '127.0.0.1'
+  port: 3000
+  threads: '2:16'
+script:
+  url: 'https://idb-public-api.example.com'
+  curl_options: 'fi'
+message_broker:
+  host: '10.0.0.1'
+  port: 61614
+  user: '<username>'
+  password: '<password>'
+  vhost: '<activemq-vhost>'
+  queue_maintenance: 'idb-maintenance'
+  ssl_cert: "/etc/idb-public-api/ssl/activemq-client.pem"
+  ssl_key: "/etc/idb-public-api/ssl/activemq-client.key"
+  ssl_ca: "/etc/idb-public-api/ssl/ca.pem"
+ldap:
+  host: '127.0.0.1'
+  port: 636
+  base: '<ldap-base>'
+  auth_dn: '<dn>'
+  auth_password: '<auth password>'
+  uid: 'uid'

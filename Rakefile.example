@@ -1,0 +1,18 @@
+require 'bundler/setup'
+require 'warbler'
+
+task :default => [:jar]
+
+Warbler::Task.new('jar') do |jar|
+  $LOAD_PATH.unshift 'lib'
+
+  require 'idb'
+
+  jar.config.jar_name = "idb-public-api-#{IDB::VERSION}"
+  jar.config.features = %w(executable)
+  jar.config.dirs = %w(bin lib scripts)
+end
+
+task :upload do
+  sh "scp idb-public-api-#{IDB::VERSION}.jar user@packages.example.com:/package-dir/"
+end
