@@ -6,7 +6,8 @@ ActiveMQ queue where it gets polled from the IDB core application.
 
 ## Setup
 
-- jruby is necessary to build this project
+- jruby 9.0.0.0 is necessary to build this project
+- OpenJDK 7 is necessary
 - run 'gem install bundler' to install bundler
 - run 'bundle install' to install required gems
 - rename 'Rakefile.example' to 'Rakefile' and adapt to your needs
@@ -15,11 +16,12 @@ ActiveMQ queue where it gets polled from the IDB core application.
 ## Building
 
 - Adapt version if needed: lib/idb.rb
-- Run 'bundle exec rake' to generate the .jar file.
+- Run 'bundle exec rake' to generate the .jar file. Generation is done by warbler, has its own config in config directory.
 
 ## Deployment
 
 - Upload the jar to the server.
+- Adjust symlink in /usr/share/bytemine-idb-public-api to point to new jar
 - Adapt service config to the new jar name: /etc/init/bytemine-idb-public-api.conf
 - Restart the service
 
