@@ -10,5 +10,5 @@ gem 'puma'
 
 group :development do
   gem 'rake'
-  gem 'warbler'
+  gem 'warbler', '1.4.9'
 end
