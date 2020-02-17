@@ -1,14 +1,15 @@
 source 'https://rubygems.org'
 
-ruby '2.2.2', engine: 'jruby', engine_version: '9.0.0.0'
+ruby '2.5.7', engine: 'jruby', engine_version: '9.2.9.0'
 
 gem 'stomp'
 gem 'virtus'
 gem 'net-ldap'
 gem 'grape'
 gem 'puma'
+gem 'multi_json'
 
 group :development do
   gem 'rake'
-  gem 'warbler', '1.4.9'
+  gem 'warbler', :require => false
 end
